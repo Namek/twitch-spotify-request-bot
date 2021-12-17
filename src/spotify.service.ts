@@ -63,6 +63,21 @@ export default class SpotifyService {
     }
   }
 
+  public async tryAddTrackByString(
+    msg: string,
+    chatFeedback: (message: string) => void
+  ) {
+    const result = await this.spotifyApi.searchTracks(msg, { limit: 1 })
+    const items = result.body.tracks?.items;
+
+    if (items?.length) {
+      await this.addTrack(items[0].id, chatFeedback);
+    } else {
+      console.log(`Command used but nothing found for query: '${msg}'`);
+      await chatFeedback('Unable to find song :(');
+    }
+  }
+
   public async addTrack(
     trackId: string,
     chatFeedback: (message: string) => void

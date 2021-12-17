@@ -95,8 +95,9 @@ export default class TwitchService {
       if (msg.startsWith(SPOTIFY_LINK_START)) {
         await this.handleSpotifyLink(msg, target);
       } else {
-        console.log('Command used but no Spotify link provided');
-        this.chatFeedback(target, 'Fail (no link): No Spotify link detected');
+        this.spotifyService.tryAddTrackByString(msg, (chatMessage) => {
+          this.chatFeedback(target, chatMessage);
+        });
       }
       console.log('<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<');
     }
