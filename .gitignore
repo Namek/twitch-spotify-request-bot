@@ -1,4 +1,6 @@
-.env
+.env*
+!.env.types
+!.env.template
 spotify-auth-store.json
 build/
 node_modules/

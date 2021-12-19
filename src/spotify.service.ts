@@ -1,11 +1,7 @@
 import SpotifyWebApi from 'spotify-web-api-node';
 import { waitForCode } from './auth-server';
-import 'dotenv/config';
 import SpotifyAuth from './spotify-auth';
 import fs from 'fs';
-import env from 'env-smart';
-import { envDirectory } from './constants';
-env.load({ directory: envDirectory });
 
 const {
   SPOTIFY_CLIENT_ID,

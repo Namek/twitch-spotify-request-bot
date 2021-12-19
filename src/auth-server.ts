@@ -1,9 +1,5 @@
 import SpotifyService from './spotify.service';
 import express from 'express';
-import 'dotenv/config';
-import env from 'env-smart';
-import { envDirectory } from './constants';
-env.load({ directory: envDirectory });
 
 const AUTH_SERVER_PORT  = process.env.PORT || process.env.AUTH_SERVER_PORT;
 

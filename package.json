@@ -19,7 +19,6 @@
   "author": "Marc Donald",
   "license": "MIT",
   "dependencies": {
-    "dotenv": "8.6.0",
     "env-smart": "2.2.0",
     "express": "4.17.1",
     "fs": "0.0.1-security",

@@ -1,9 +1,6 @@
 import tmi, { ChatUserstate } from 'tmi.js';
 import { getTrackIdFromLink, SPOTIFY_LINK_START } from './messageUtils';
 import SpotifyService from './spotify.service';
-import env from 'env-smart';
-import { envDirectory } from './constants';
-env.load({ directory: envDirectory });
 
 const {
   TWITCH_CHANNEL,
