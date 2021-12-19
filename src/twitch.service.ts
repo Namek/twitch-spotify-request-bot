@@ -4,7 +4,9 @@ import SpotifyService from './spotify.service';
 
 const {
   TWITCH_CHANNEL,
-  COMMAND_PREFIX,
+  COMMAND_QUEUE__PREFIX,
+  COMMAND_SKIP_TO_NEXT__PREFIX,
+  COMMAND_SKIP_TO_NEXT__ALLOWED_USERS,
   SUBSCRIBERS_ONLY,
   TWITCH_TOKEN,
   BOT_USERNAME,
@@ -76,7 +78,8 @@ export default class TwitchService {
     originalMsg: string,
     self: boolean
   ) {
-    if (self || !COMMAND_PREFIX) {
+    if (self) {
+      // Don't analyze messages for ourselves, we might get into infinite loop.
       return;
     }
 
@@ -88,14 +91,32 @@ export default class TwitchService {
       }
 
     let msg = originalMsg.trim();
-    if (msg === COMMAND_PREFIX) {
-      this.chatFeedback(target, `Add a song by author title or with Spotify Track URL, e.g. "${COMMAND_PREFIX} Rick Astley - Never Gonna Give You Up" or "${COMMAND_PREFIX} https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT?si=34c1e97f523c44b1 "`);
+    if (msg === COMMAND_QUEUE__PREFIX) {
+      this.chatFeedback(target, `Add a song by author title or with Spotify Track URL, e.g. "${COMMAND_QUEUE__PREFIX} Rick Astley - Never Gonna Give You Up" or "${COMMAND_QUEUE__PREFIX} https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT?si=34c1e97f523c44b1 "`);
       return;
     }
 
-    if (msg.startsWith(COMMAND_PREFIX)) {
+    if (msg === COMMAND_SKIP_TO_NEXT__PREFIX) {
+      let allow = true;
+
+      if (!!COMMAND_SKIP_TO_NEXT__ALLOWED_USERS?.trim().length && userState.username) {
+        const allowedUsernames = COMMAND_SKIP_TO_NEXT__ALLOWED_USERS?.split(',');
+        allow = allowedUsernames.includes(userState.username);
+      }
+
+      if (allow) {
+        this.spotifyService.skipToNextTrack();
+      } else {
+        console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>');
+        console.log(`Blocked a call of skip from ${userState.username}`);
+        console.log('<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<');
+      }
+      return;
+    }
+
+    if (msg.startsWith(COMMAND_QUEUE__PREFIX)) {
       console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>');
-      msg = msg.substring(`${COMMAND_PREFIX} `.length);
+      msg = msg.substring(`${COMMAND_QUEUE__PREFIX} `.length);
       if (msg.startsWith(SPOTIFY_LINK_START)) {
         await this.handleSpotifyLink(msg, target);
       } else {

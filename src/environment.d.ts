@@ -11,7 +11,9 @@ declare global {
       ADD_TO_QUEUE: boolean;
       ADD_TO_PLAYLIST: boolean;
       SUBSCRIBERS_ONLY: boolean;
-      COMMAND_PREFIX: string;
+      COMMAND_QUEUE__PREFIX: string;
+      COMMAND_SKIP_TO_NEXT__PREFIX: string;
+      COMMAND_SKIP_TO_NEXT__ALLOWED_USERS: string;
       AUTH_SERVER_PORT: number;
       HOST: string;
     }

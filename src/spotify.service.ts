@@ -130,6 +130,21 @@ export default class SpotifyService {
     }
   }
 
+  public async skipToNextTrack() {
+    const doNextTrack = async () => this.spotifyApi.skipToNext();
+
+    try {
+      if (this.hasTokenExpired()) {
+        console.log('Spotify token expired, refreshing...');
+        await this.refreshToken(doNextTrack);
+      } else {
+        await doNextTrack();
+      }
+    } catch (e) {
+      console.error(`Error skipping track: ${e}`);
+    }
+  }
+
   private async addToQueue(trackId: string, songName: string) {
     await this.spotifyApi.addToQueue(this.createTrackURI(trackId));
     console.log(`Added ${songName} to queue`);

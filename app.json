@@ -63,9 +63,17 @@
       "description": "Enable or disable subscriber only mode | Use: true or false",
       "required": false
     },
-    "COMMAND_PREFIX":{
-      "description": "Your prefix",
+    "COMMAND_QUEUE__PREFIX": {
+      "description": "Your prefix for queue",
       "required": true
+    },
+    "COMMAND_SKIP_TO_NEXT__PREFIX": {
+      "description": "Your prefix for song skip",
+      "required": true
+    },
+    "COMMAND_SKIP_TO_NEXT__ALLOWED_USERS": {
+      "description": "Comma-separated user names of people allowed to skip tracks. Empty value allows everyone. To disable for all, pass your own name only.",
+      "required": false
     },
     "HOST":{
       "description": "https://app-name.herokuapp.com (Replace 'app-name' same as your declaration in 'App name' (First form item) or the 'Open app' button will not work",
