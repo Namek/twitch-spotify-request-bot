@@ -73,20 +73,27 @@ export default class TwitchService {
   private async handleMessage(
     target: string,
     userState: ChatUserstate,
-    msg: string,
+    originalMsg: string,
     self: boolean
   ) {
-    if (self) {
+    if (self || !COMMAND_PREFIX) {
       return;
     }
 
-    if (COMMAND_PREFIX && msg.startsWith(COMMAND_PREFIX)) {
       if (SUBSCRIBERS_ONLY) {
         if (!userState.subscriber) {
+        this.chatFeedback(target, "Sorry, song requests are only for subscribers.");
           return;
         }
       }
 
+    let msg = originalMsg.trim();
+    if (msg === COMMAND_PREFIX) {
+      this.chatFeedback(target, `Add a song by author title or with Spotify Track URL, e.g. "${COMMAND_PREFIX} Rick Astley - Never Gonna Give You Up" or "${COMMAND_PREFIX} https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT?si=34c1e97f523c44b1 "`);
+      return;
+    }
+
+    if (msg.startsWith(COMMAND_PREFIX)) {
       console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>');
       msg = msg.substring(`${COMMAND_PREFIX} `.length);
       if (msg.startsWith(SPOTIFY_LINK_START)) {
