@@ -6,29 +6,14 @@
 #version				:1.0
 #usage					:bash build.sh
 #==============================================================================
-
-ENV=./.env
-
-echo "Checking if .env file exists...";
-sleep 2
 	
 echo "Initializing npm...";
 npm install
 
-if [ -f "$ENV" ]; then
-
-	clear >$(tty)
-	echo "Compiling source to JS...";
-	npm run build
+clear >$(tty)
+echo "Compiling source to JS...";
+npm run build
 	
-else
-	clear >$(tty)
-	echo "Please create a .env file based on .env.template to continue...";
-	sleep 2
-	exit
-
-fi
-
 clear >$(tty)
 echo "Building OS-native binaries from JS...";
 pkg ./build/index.js --targets node14-win-x64,node14-macos-x64,node14-linux-x64 --out-path ./dist/
