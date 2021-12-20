@@ -12,6 +12,7 @@ declare global {
       ADD_TO_PLAYLIST: boolean;
       SUBSCRIBERS_ONLY: boolean;
       COMMAND_QUEUE__PREFIX: string;
+      COMMAND_CURRENT_SONG__PREFIX: string;
       COMMAND_SKIP_TO_NEXT__PREFIX: string;
       COMMAND_SKIP_TO_NEXT__ALLOWED_USERS
       COMMAND_SET_VOLUME__PREFIX: string;

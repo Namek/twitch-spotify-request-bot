@@ -9,6 +9,7 @@ const {
   BOT_USERNAME,
   CHAT_FEEDBACK,
   COMMAND_QUEUE__PREFIX,
+  COMMAND_CURRENT_SONG__PREFIX,
   COMMAND_SKIP_TO_NEXT__PREFIX,
   COMMAND_SKIP_TO_NEXT__ALLOWED_USERS,
   COMMAND_SET_VOLUME__PREFIX,
@@ -95,10 +96,14 @@ export default class TwitchService {
     let msg = originalMsg.trim();
     if (msg === COMMAND_QUEUE__PREFIX) {
       this.chatFeedback(target, `Add a song to the queue by author title or with Spotify Track URL, e.g. "${COMMAND_QUEUE__PREFIX} Rick Astley - Never Gonna Give You Up" or "${COMMAND_QUEUE__PREFIX} https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT?si=34c1e97f523c44b1 "`);
-      return;
-    }
-
-    if (msg.startsWith(COMMAND_QUEUE__PREFIX)) {
+    } else if (msg === COMMAND_CURRENT_SONG__PREFIX) {
+      const name = await this.spotifyService.getTrackName();
+      if (name) {
+        this.chatFeedback(target, `Playing: ${name}`);
+      } else {
+        this.chatFeedback(target, "Not sure what is playing... is it?");
+      }
+    } else if (msg.startsWith(COMMAND_QUEUE__PREFIX)) {
       console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>');
       const args = getCommandArgs(COMMAND_QUEUE__PREFIX, msg);
 

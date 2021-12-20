@@ -67,6 +67,10 @@
       "description": "Your prefix for queue",
       "required": true
     },
+    "COMMAND_CURRENT_SONG__PREFIX": {
+      "description": "Your prefix for checking currently playing song",
+      "required": true,
+    },
     "COMMAND_SKIP_TO_NEXT__PREFIX": {
       "description": "Your prefix for song skip command",
       "required": true

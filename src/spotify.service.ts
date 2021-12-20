@@ -59,6 +59,16 @@ export default class SpotifyService {
     }
   }
 
+  public async getTrackName() {
+    const state = await this.spotifyApi.getMyCurrentPlayingTrack();
+
+    if (!state?.body?.item) {
+      return null;
+    }
+    const trackDetails = await this.spotifyApi.getTrack(state.body!.item!.id);
+    return getSongName(trackDetails.body);
+  }
+
   public async tryAddTrackByString(
     msg: string,
     chatFeedback: (message: string) => void
@@ -80,11 +90,18 @@ export default class SpotifyService {
   ) {
     const addSong = async () => {
       console.log(`Attempting to add ${trackId}`);
-      const songInfo = await this.spotifyApi.getTrack(trackId);
+      const track = await this.spotifyApi.getTrack(trackId);
+
+      if (!track) {
+        chatFeedback(`Fail: could not find the song.`);
+      }
+
+      const songName = getSongName(track.body);
+
       if (ADD_TO_QUEUE) {
         try {
-          await this.addToQueue(trackId, songInfo?.body.name);
-          chatFeedback(`Success: ${songInfo?.body.name} added to queue`);
+          await this.addToQueue(trackId, songName);
+          chatFeedback(`Success: "${songName}" added to queue`);
         } catch (e) {
           if (e.message === 'Not Found') {
             console.error(
@@ -93,21 +110,21 @@ export default class SpotifyService {
           } else {
             console.error(`Error: Unable to add song to queue - ${e.message}`);
           }
-          chatFeedback(`Fail: ${songInfo?.body.name} not added to queue`);
+          chatFeedback(`Fail: ${songName} not added to queue`);
         }
       }
 
       if (ADD_TO_PLAYLIST) {
         try {
-          await this.addToPlaylist(trackId, songInfo?.body.name);
-          chatFeedback(`Success: ${songInfo?.body.name} added to playlist`);
+          await this.addToPlaylist(trackId, songName);
+          chatFeedback(`Success: "${songName}" added to playlist`);
         } catch (e) {
           if (e.message === 'Duplicate Track') {
             chatFeedback(
-              `Fail (duplicate): ${songInfo?.body.name} already in the playlist`
+              `Fail (duplicate): ${songName} already in the playlist`
             );
           } else {
-            chatFeedback(`Fail: ${songInfo?.body.name} not added to playlist`);
+            chatFeedback(`Fail: ${songName} not added to playlist`);
           }
         }
       }
@@ -202,6 +219,7 @@ export default class SpotifyService {
 
   public getAuthorizationUrl() {
     const scopes = [
+      'user-read-currently-playing',
       'user-modify-playback-state',
       'playlist-read-private',
       'playlist-modify-public',
@@ -284,4 +302,9 @@ export default class SpotifyService {
   private hasTokenExpired(): boolean {
     return new Date().getTime() / 1000 >= this.spotifyAuth.expireTime;
   }
+}
+
+function getSongName(info: SpotifyApi.SingleTrackResponse): string {
+  const artists = info.artists.map(a => a.name).join(', ');
+  return `${artists} - ${info.name}`;
 }
