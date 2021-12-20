@@ -4,13 +4,15 @@ import SpotifyService from './spotify.service';
 
 const {
   TWITCH_CHANNEL,
-  COMMAND_QUEUE__PREFIX,
-  COMMAND_SKIP_TO_NEXT__PREFIX,
-  COMMAND_SKIP_TO_NEXT__ALLOWED_USERS,
   SUBSCRIBERS_ONLY,
   TWITCH_TOKEN,
   BOT_USERNAME,
   CHAT_FEEDBACK,
+  COMMAND_QUEUE__PREFIX,
+  COMMAND_SKIP_TO_NEXT__PREFIX,
+  COMMAND_SKIP_TO_NEXT__ALLOWED_USERS,
+  COMMAND_SET_VOLUME__PREFIX,
+  COMMAND_SET_VOLUME__ALLOWED_USERS,
 } = process.env;
 
 interface TwitchOptions {
@@ -24,7 +26,7 @@ interface TwitchOptions {
 export default class TwitchService {
   private twitchClient: tmi.Client | null = null;
 
-  constructor(private spotifyService: SpotifyService) {}
+  constructor(private spotifyService: SpotifyService) { }
 
   public async connectToChat() {
     let twitchOptions: TwitchOptions = {
@@ -83,48 +85,52 @@ export default class TwitchService {
       return;
     }
 
-      if (SUBSCRIBERS_ONLY) {
-        if (!userState.subscriber) {
-        this.chatFeedback(target, "Sorry, song requests are only for subscribers.");
-          return;
-        }
+    if (SUBSCRIBERS_ONLY) {
+      if (!userState.subscriber) {
+        this.chatFeedback(target, "Sorry, only for subscribers.");
+        return;
       }
+    }
 
     let msg = originalMsg.trim();
     if (msg === COMMAND_QUEUE__PREFIX) {
-      this.chatFeedback(target, `Add a song by author title or with Spotify Track URL, e.g. "${COMMAND_QUEUE__PREFIX} Rick Astley - Never Gonna Give You Up" or "${COMMAND_QUEUE__PREFIX} https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT?si=34c1e97f523c44b1 "`);
+      this.chatFeedback(target, `Add a song to the queue by author title or with Spotify Track URL, e.g. "${COMMAND_QUEUE__PREFIX} Rick Astley - Never Gonna Give You Up" or "${COMMAND_QUEUE__PREFIX} https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT?si=34c1e97f523c44b1 "`);
       return;
     }
 
-    if (msg === COMMAND_SKIP_TO_NEXT__PREFIX) {
-      let allow = true;
+    if (msg.startsWith(COMMAND_QUEUE__PREFIX)) {
+      console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>');
+      const args = getCommandArgs(COMMAND_QUEUE__PREFIX, msg);
 
-      if (!!COMMAND_SKIP_TO_NEXT__ALLOWED_USERS?.trim().length && userState.username) {
-        const allowedUsernames = COMMAND_SKIP_TO_NEXT__ALLOWED_USERS?.split(',');
-        allow = allowedUsernames.includes(userState.username);
+      if (args.startsWith(SPOTIFY_LINK_START)) {
+        await this.handleSpotifyLink(args, target);
+      } else {
+        this.spotifyService.tryAddTrackByString(args, (chatMessage) => {
+          this.chatFeedback(target, chatMessage);
+        });
       }
-
-      if (allow) {
+      console.log('<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<');
+    } else if (msg === COMMAND_SKIP_TO_NEXT__PREFIX) {
+      if (isUserPrivileged(userState, COMMAND_SKIP_TO_NEXT__ALLOWED_USERS)) {
         this.spotifyService.skipToNextTrack();
       } else {
         console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>');
         console.log(`Blocked a call of skip from ${userState.username}`);
         console.log('<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<');
       }
-      return;
-    }
+    } else if (msg.startsWith(COMMAND_SET_VOLUME__PREFIX)) {
+      if (isUserPrivileged(userState, COMMAND_SET_VOLUME__ALLOWED_USERS)) {
+        const args = getCommandArgs(COMMAND_SET_VOLUME__PREFIX, msg);
+        const num = Number.parseInt(args, 10);
 
-    if (msg.startsWith(COMMAND_QUEUE__PREFIX)) {
-      console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>');
-      msg = msg.substring(`${COMMAND_QUEUE__PREFIX} `.length);
-      if (msg.startsWith(SPOTIFY_LINK_START)) {
-        await this.handleSpotifyLink(msg, target);
+        if (!Number.isNaN(num)) {
+          await this.spotifyService.setVolume(num);
+        }
       } else {
-        this.spotifyService.tryAddTrackByString(msg, (chatMessage) => {
-          this.chatFeedback(target, chatMessage);
-        });
+        console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>');
+        console.log(`Blocked a call of skip from ${userState.username}`);
+        console.log('<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<');
       }
-      console.log('<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<');
     }
   }
 
@@ -138,7 +144,7 @@ export default class TwitchService {
       console.error('Unable to parse track ID from message');
       this.chatFeedback(
         target,
-        'Fail (invalid message): Unable to parse track ID from message'
+        'Błąd: Nie mogę odczytać identyfikatora utworu'
       );
     }
   }
@@ -148,4 +154,19 @@ export default class TwitchService {
       this.twitchClient?.say(target, message);
     }
   }
+}
+
+function getCommandArgs(commandPrefix: string, msg: string) {
+  return msg.substring(`${commandPrefix} `.length);
+}
+
+function isUserPrivileged(userState: ChatUserstate, privilegedList?: string | undefined) {
+  let allow = true;
+
+  if (!!privilegedList?.trim().length && userState.username) {
+    const allowedUsernames = privilegedList?.split(',').map(name => name.toLocaleLowerCase());
+    allow = allowedUsernames.includes(userState.username.toLocaleLowerCase());
+  }
+
+  return allow;
 }

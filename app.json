@@ -68,11 +68,19 @@
       "required": true
     },
     "COMMAND_SKIP_TO_NEXT__PREFIX": {
-      "description": "Your prefix for song skip",
+      "description": "Your prefix for song skip command",
       "required": true
     },
     "COMMAND_SKIP_TO_NEXT__ALLOWED_USERS": {
       "description": "Comma-separated user names of people allowed to skip tracks. Empty value allows everyone. To disable for all, pass your own name only.",
+      "required": false
+    },
+    "COMMAND_SET_VOLUME__PREFIX": {
+      "description": "Your prefix for setting volume command",
+      "required": true
+    },
+    "COMMAND_SET_VOLUME__ALLOWED_USERS": {
+      "description": "Comma-separated user names of people allowed to change volume tracks. Empty value allows everyone. To disable for all, pass your own name only.",
       "required": false
     },
     "HOST":{

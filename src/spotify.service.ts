@@ -145,6 +145,21 @@ export default class SpotifyService {
     }
   }
 
+  public async setVolume(vol: number) {
+    const doSetVolume = async () => this.spotifyApi.setVolume(Math.max(0, Math.min(100, vol)));
+
+    try {
+      if (this.hasTokenExpired()) {
+        console.log('Spotify token expired, refreshing...');
+        await this.refreshToken(doSetVolume);
+      } else {
+        await doSetVolume();
+      }
+    } catch (e) {
+      console.error(`Error setting volume: ${e}`);
+    }
+  }
+
   private async addToQueue(trackId: string, songName: string) {
     await this.spotifyApi.addToQueue(this.createTrackURI(trackId));
     console.log(`Added ${songName} to queue`);
