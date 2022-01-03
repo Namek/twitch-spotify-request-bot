@@ -93,6 +93,11 @@ If you would prefer to launch the bot without generating a binary file you can r
 Avoid generating new `package-lock.json` files unless you are using an Ubuntu machine. This is due to a bug with the
 Heroku deploy requiring `xubuntu` dependencies.
 
+## Development
+
+- Run `npm run dev` for watching/recompiling
+- Run `npm run dev:inspect` for watching/recompiling + debug
+
 ## Open Source Libraries Used
 
 ### [Spotify Web API Node](https://github.com/thelinmichael/spotify-web-api-node)
