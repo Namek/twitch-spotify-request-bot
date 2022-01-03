@@ -177,6 +177,11 @@ export default class SpotifyService {
     }
   }
 
+  public async getVolume() {
+    const devices = (await this.spotifyApi.getMyDevices()).body.devices.filter(d => d.is_active);
+    return devices?.length ? devices[0].volume_percent : 0;
+  }
+
   private async addToQueue(trackId: string, songName: string) {
     await this.spotifyApi.addToQueue(this.createTrackURI(trackId));
     console.log(`Added ${songName} to queue`);
@@ -220,6 +225,7 @@ export default class SpotifyService {
   public getAuthorizationUrl() {
     const scopes = [
       'user-read-currently-playing',
+      'user-read-playback-state',
       'user-modify-playback-state',
       'playlist-read-private',
       'playlist-modify-public',

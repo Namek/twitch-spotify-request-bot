@@ -130,6 +130,9 @@ export default class TwitchService {
 
         if (!Number.isNaN(num)) {
           await this.spotifyService.setVolume(num);
+        } else {
+          const volume = await this.spotifyService.getVolume();
+          this.chatFeedback(target, `The volume is ${volume}%`);
         }
       } else {
         console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>');

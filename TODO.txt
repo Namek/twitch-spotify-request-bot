@@ -1,0 +1,4 @@
+* fix: authorization token should be refreshed
+* skip for unprivileged - when 3 unprivileged persons use the !skip command
+* fetch and output the current queue
+* fix: the volume value seems to be incorrect on !volume command call
