@@ -49,6 +49,7 @@ export default class SpotifyService {
         await this.performNewAuthorization(onAuth);
       } else {
         console.log('Spotify credentials found');
+        await this.checkTokenAndProceed();
         this.spotifyApi.setAccessToken(this.spotifyAuth.accessToken);
         this.spotifyApi.setRefreshToken(this.spotifyAuth.refreshToken);
         await onAuth();
