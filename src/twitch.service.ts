@@ -110,14 +110,14 @@ export default class TwitchService {
       if (args.startsWith(SPOTIFY_LINK_START)) {
         await this.handleSpotifyLink(args, target);
       } else {
-        this.spotifyService.tryAddTrackByString(args, (chatMessage) => {
+        await this.spotifyService.tryAddTrackByString(args, (chatMessage) => {
           this.chatFeedback(target, chatMessage);
         });
       }
       console.log('<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<');
     } else if (msg === COMMAND_SKIP_TO_NEXT__PREFIX) {
       if (isUserPrivileged(userState, COMMAND_SKIP_TO_NEXT__ALLOWED_USERS)) {
-        this.spotifyService.skipToNextTrack();
+        await this.spotifyService.skipToNextTrack();
       } else {
         console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>');
         console.log(`Blocked a call of skip from ${userState.username}`);

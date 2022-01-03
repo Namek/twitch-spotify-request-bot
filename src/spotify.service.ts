@@ -59,28 +59,58 @@ export default class SpotifyService {
     }
   }
 
-  public async getTrackName() {
-    const state = await this.spotifyApi.getMyCurrentPlayingTrack();
+  public async checkTokenAndProceed() {
+    return new Promise(async (resolve, reject) => {
+      if (this.hasTokenExpired()) {
+        console.log('Spotify token expired, refreshing...');
+        try {
+          await this.refreshToken(resolve);
+          console.log('Spotify token refreshed successfully!');
+        } catch (err) {
+          reject(err);
+        }
+      } else {
+        resolve();
+      }
+    });
+  }
 
-    if (!state?.body?.item) {
+  public async getTrackName(): Promise<string | null> {
+    try {
+      await this.checkTokenAndProceed();
+
+      const state = await this.spotifyApi.getMyCurrentPlayingTrack();
+
+      if (!state?.body?.item) {
+        return null;
+      }
+      const trackDetails = await this.spotifyApi.getTrack(state.body!.item!.id);
+      return getSongName(trackDetails.body);
+    } catch (err) {
+      console.error(err);
       return null;
     }
-    const trackDetails = await this.spotifyApi.getTrack(state.body!.item!.id);
-    return getSongName(trackDetails.body);
   }
 
   public async tryAddTrackByString(
     msg: string,
     chatFeedback: (message: string) => void
   ) {
-    const result = await this.spotifyApi.searchTracks(msg, { limit: 1 })
-    const items = result.body.tracks?.items;
+    try {
+      await this.checkTokenAndProceed();
 
-    if (items?.length) {
-      await this.addTrack(items[0].id, chatFeedback);
-    } else {
-      console.log(`Command used but nothing found for query: '${msg}'`);
+      const result = await this.spotifyApi.searchTracks(msg, {limit: 1})
+      const items = result.body.tracks?.items;
+
+      if (items?.length) {
+        await this.addTrack(items[0].id, chatFeedback);
+      } else {
+        console.log(`Command used but nothing found for query: '${msg}'`);
+        await chatFeedback('Unable to find song :(');
+      }
+    } catch (err) {
       await chatFeedback('Unable to find song :(');
+      console.error(err);
     }
   }
 
@@ -88,7 +118,9 @@ export default class SpotifyService {
     trackId: string,
     chatFeedback: (message: string) => void
   ) {
-    const addSong = async () => {
+    try {
+      await this.checkTokenAndProceed();
+
       console.log(`Attempting to add ${trackId}`);
       const track = await this.spotifyApi.getTrack(trackId);
 
@@ -128,15 +160,6 @@ export default class SpotifyService {
           }
         }
       }
-    };
-
-    try {
-      if (this.hasTokenExpired()) {
-        console.log('Spotify token expired, refreshing...');
-        await this.refreshToken(addSong);
-      } else {
-        await addSong();
-      }
     } catch (e) {
       console.error(`Error adding track ${e}`);
       if (e.body?.error?.message === 'invalid id') {
@@ -148,60 +171,60 @@ export default class SpotifyService {
   }
 
   public async skipToNextTrack() {
-    const doNextTrack = async () => this.spotifyApi.skipToNext();
-
     try {
-      if (this.hasTokenExpired()) {
-        console.log('Spotify token expired, refreshing...');
-        await this.refreshToken(doNextTrack);
-      } else {
-        await doNextTrack();
-      }
-    } catch (e) {
-      console.error(`Error skipping track: ${e}`);
+      await this.checkTokenAndProceed();
+      await this.spotifyApi.skipToNext();
+    } catch (err) {
+      console.error(`Error skipping track: ${err}`);
     }
   }
 
   public async setVolume(vol: number) {
-    const doSetVolume = async () => this.spotifyApi.setVolume(Math.max(0, Math.min(100, vol)));
-
     try {
-      if (this.hasTokenExpired()) {
-        console.log('Spotify token expired, refreshing...');
-        await this.refreshToken(doSetVolume);
-      } else {
-        await doSetVolume();
-      }
-    } catch (e) {
-      console.error(`Error setting volume: ${e}`);
+      await this.checkTokenAndProceed();
+      await this.spotifyApi.setVolume(Math.max(0, Math.min(100, vol)));
+    } catch (err) {
+      console.error(`Error setting volume: ${err}`);
     }
   }
 
   public async getVolume() {
-    const devices = (await this.spotifyApi.getMyDevices()).body.devices.filter(d => d.is_active);
-    return devices?.length ? devices[0].volume_percent : 0;
+    try {
+      await this.checkTokenAndProceed();
+      const devices = (await this.spotifyApi.getMyDevices()).body.devices.filter(d => d.is_active);
+      return devices?.length ? devices[0].volume_percent : 0;
+    } catch (err) {
+      console.error(`Error getting volume: ${err}`);
+    }
   }
 
   private async addToQueue(trackId: string, songName: string) {
-    await this.spotifyApi.addToQueue(this.createTrackURI(trackId));
-    console.log(`Added ${songName} to queue`);
+    try {
+      await this.checkTokenAndProceed();
+      await this.spotifyApi.addToQueue(this.createTrackURI(trackId));
+      console.log(`Added ${songName} to queue`);
+    } catch (err) {
+      console.error(`Error getting volume: ${err}`);
+    }
   }
 
   private async addToPlaylist(trackId: string, songName: string) {
-    if (SPOTIFY_PLAYLIST_ID) {
-      if (await this.doesPlaylistContainTrack(trackId)) {
-        console.log(`${songName} is already in the playlist`);
-        throw new Error('Duplicate Track');
-      } else {
-        await this.spotifyApi.addTracksToPlaylist(SPOTIFY_PLAYLIST_ID, [
-          this.createTrackURI(trackId),
-        ]);
-        console.log(`Added ${songName} to playlist`);
-      }
-    } else {
+    if (!SPOTIFY_PLAYLIST_ID) {
       console.error(
         'Error: Cannot add to playlist - Please provide a playlist ID in the config file'
       );
+      return;
+    }
+
+    await this.checkTokenAndProceed();
+
+    if (await this.doesPlaylistContainTrack(trackId)) {
+      console.log(`${songName} is already in the playlist`);
+    } else {
+      await this.spotifyApi.addTracksToPlaylist(SPOTIFY_PLAYLIST_ID, [
+        this.createTrackURI(trackId),
+      ]);
+      console.log(`Added ${songName} to playlist`);
     }
   }
 
@@ -209,6 +232,8 @@ export default class SpotifyService {
     `spotify:track:${trackId}`;
 
   private async doesPlaylistContainTrack(trackId: string) {
+    await this.checkTokenAndProceed();
+
     const playlistInfo = await this.spotifyApi.getPlaylist(
       SPOTIFY_PLAYLIST_ID!
     );
@@ -306,7 +331,7 @@ export default class SpotifyService {
   }
 
   private hasTokenExpired(): boolean {
-    return new Date().getTime() / 1000 >= this.spotifyAuth.expireTime;
+    return new Date().getTime() / 1000 >= (this.spotifyAuth?.expireTime ?? 0);
   }
 }
 
