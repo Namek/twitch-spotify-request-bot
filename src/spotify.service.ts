@@ -85,8 +85,8 @@ export default class SpotifyService {
       if (!state?.body?.item) {
         return null;
       }
-      const trackDetails = await this.spotifyApi.getTrack(state.body!.item!.id);
-      return getSongName(trackDetails.body);
+
+      return this.getSongNameByTrackId(state.body!.item!.id);
     } catch (err) {
       console.error(err);
       return null;
@@ -96,7 +96,7 @@ export default class SpotifyService {
   public async tryAddTrackByString(
     msg: string,
     chatFeedback: (message: string) => void
-  ) {
+  ): Promise<string | undefined> {
     try {
       await this.checkTokenAndProceed();
 
@@ -104,7 +104,9 @@ export default class SpotifyService {
       const items = result.body.tracks?.items;
 
       if (items?.length) {
-        await this.addTrack(items[0].id, chatFeedback);
+        const item = items[0];
+        await this.addTrack(item.id, chatFeedback);
+        return toSongName(item);
       } else {
         console.log(`Command used but nothing found for query: '${msg}'`);
         await chatFeedback('Unable to find song :(');
@@ -129,7 +131,7 @@ export default class SpotifyService {
         chatFeedback(`Fail: could not find the song.`);
       }
 
-      const songName = getSongName(track.body);
+      const songName = toSongName(track.body);
 
       if (ADD_TO_QUEUE) {
         try {
@@ -199,10 +201,15 @@ export default class SpotifyService {
     }
   }
 
+  public async getSongNameByTrackId(trackId: string): Promise<string> {
+    const trackDetails = await this.spotifyApi.getTrack(trackId);
+    return toSongName(trackDetails.body);
+  }
+
   private async addToQueue(trackId: string, songName: string) {
     try {
       await this.checkTokenAndProceed();
-      await this.spotifyApi.addToQueue(this.createTrackURI(trackId));
+      await this.spotifyApi.addToQueue(createTrackURI(trackId));
       console.log(`Added ${songName} to queue`);
     } catch (err) {
       console.error(`Error getting volume: ${err}`);
@@ -223,14 +230,11 @@ export default class SpotifyService {
       console.log(`${songName} is already in the playlist`);
     } else {
       await this.spotifyApi.addTracksToPlaylist(SPOTIFY_PLAYLIST_ID, [
-        this.createTrackURI(trackId),
+        createTrackURI(trackId),
       ]);
       console.log(`Added ${songName} to playlist`);
     }
   }
-
-  private createTrackURI = (trackId: string): string =>
-    `spotify:track:${trackId}`;
 
   private async doesPlaylistContainTrack(trackId: string) {
     await this.checkTokenAndProceed();
@@ -336,7 +340,11 @@ export default class SpotifyService {
   }
 }
 
-function getSongName(info: SpotifyApi.SingleTrackResponse): string {
+function toSongName(info: SpotifyApi.SingleTrackResponse): string {
   const artists = info.artists.map(a => a.name).join(', ');
   return `${artists} - ${info.name}`;
+}
+
+function createTrackURI(trackId: string): string {
+  return `spotify:track:${trackId}`;
 }
