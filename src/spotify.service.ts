@@ -13,6 +13,12 @@ const {
   HOST,
 } = process.env;
 
+export interface FoundTrack {
+  name: string;
+  id: string;
+  info: SpotifyApi.TrackObjectFull;
+}
+
 export default class SpotifyService {
   private spotifyApi: SpotifyWebApi;
   private spotifyAuth: SpotifyAuth;
@@ -91,6 +97,19 @@ export default class SpotifyService {
       console.error(err);
       return null;
     }
+  }
+
+  public async findTracks(query: string, limit: number = 1): Promise<FoundTrack[]> {
+    await this.checkTokenAndProceed();
+
+    const result = await this.spotifyApi.searchTracks(query, {limit})
+    const items = result.body.tracks?.items;
+
+    return items?.map(it => ({
+      name: toSongName(it),
+      id: it.id,
+      info: it,
+    })) ?? [];
   }
 
   public async tryAddTrackByString(
@@ -340,7 +359,7 @@ export default class SpotifyService {
   }
 }
 
-function toSongName(info: SpotifyApi.SingleTrackResponse): string {
+export function toSongName(info: SpotifyApi.SingleTrackResponse): string {
   const artists = info.artists.map(a => a.name).join(', ');
   return `${artists} - ${info.name}`;
 }

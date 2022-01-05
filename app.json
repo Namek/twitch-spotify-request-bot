@@ -64,12 +64,20 @@
       "required": false
     },
     "COMMAND_QUEUE__PREFIX": {
-      "description": "Your prefix for queue",
+      "description": "Your prefix for song request",
+      "required": true
+    },
+    "COMMAND_GET_QUEUE__PREFIX": {
+      "description": "Your prefix for getting a queue (list of songs)",
       "required": true
     },
     "COMMAND_CURRENT_SONG__PREFIX": {
       "description": "Your prefix for checking currently playing song",
-      "required": true,
+      "required": true
+    },
+    "COMMAND_GET_QUEUE__REFRESH__COOLDOWN_MS": {
+      "description": "The amount of milliseconds between queue refresh.",
+      "required": false
     },
     "COMMAND_SKIP_TO_NEXT__PREFIX": {
       "description": "Your prefix for song skip command",
