@@ -10,6 +10,7 @@ const {
   CHAT_FEEDBACK,
   COMMAND_QUEUE__PREFIX,
   COMMAND_GET_QUEUE__PREFIX,
+  COMMAND_GET_QUEUE__PREFER_WHISPER,
   COMMAND_GET_QUEUE__REFRESH__COOLDOWN_MS,
   COMMAND_CURRENT_SONG__PREFIX,
   COMMAND_SKIP_TO_NEXT__PREFIX,
@@ -139,11 +140,12 @@ export default class TwitchService {
         this.chatFeedback(target, "Not sure what is playing... is it even?");
       }
     } else if (msg === COMMAND_GET_QUEUE__PREFIX) {
+      const isWhisperPreferred = !!COMMAND_GET_QUEUE__PREFER_WHISPER;
       if (this.queue.length > 0) {
         const msg = this.queue.map((song, index) => `${index + 1}. ${song.songName} [${song.whoRequested}]`).join('\n');
-        await this.respond(userState.username!, target, msg);
+        await this.respond(userState.username!, target, msg, isWhisperPreferred);
       } else {
-        await this.respond(userState.username!, target, "No songs added to the queue by the chat.");
+        await this.respond(userState.username!, target, "No songs added to the queue by the chat.", isWhisperPreferred);
       }
     } else if (msg.startsWith(COMMAND_QUEUE__PREFIX)) {
       console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>');
@@ -241,11 +243,12 @@ export default class TwitchService {
   /**
    * Preferably whisper. If you can't then respond publicly.
    */
-  private async respond(username: string, orChannelName: string, message: string) {
+  private async respond(username: string, orChannelName: string, message: string, isWhisperPreferred: boolean = true) {
     const canWhisper = BOT_USERNAME.toLocaleLowerCase() !== username;
+    const shouldWhisper = isWhisperPreferred && canWhisper;
 
     try {
-      if (canWhisper) {
+      if (shouldWhisper) {
         await this.twitchClient?.whisper(username, message);
       } else {
         this.twitchClient?.say(orChannelName, message);

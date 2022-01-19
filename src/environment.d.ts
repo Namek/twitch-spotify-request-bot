@@ -13,6 +13,7 @@ declare global {
       SUBSCRIBERS_ONLY: boolean;
       COMMAND_QUEUE__PREFIX: string;
       COMMAND_GET_QUEUE__PREFIX: string;
+      COMMAND_GET_QUEUE__PREFER_WHISPER: boolean;
       COMMAND_GET_QUEUE__REFRESH__COOLDOWN_MS: number;
       COMMAND_CURRENT_SONG__PREFIX: string;
       COMMAND_SKIP_TO_NEXT__PREFIX: string;

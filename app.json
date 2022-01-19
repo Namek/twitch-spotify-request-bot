@@ -71,6 +71,10 @@
       "description": "Your prefix for getting a queue (list of songs)",
       "required": true
     },
+    "COMMAND_GET_QUEUE__PREFER_WHISPER": {
+      "description": "If whisper is possible then prefer it over public response.",
+      "required": false
+    },
     "COMMAND_CURRENT_SONG__PREFIX": {
       "description": "Your prefix for checking currently playing song",
       "required": true
