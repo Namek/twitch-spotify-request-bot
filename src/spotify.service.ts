@@ -102,7 +102,7 @@ export default class SpotifyService {
   public async findTracks(query: string, limit: number = 1): Promise<FoundTrack[]> {
     await this.checkTokenAndProceed();
 
-    const result = await this.spotifyApi.searchTracks(query, {limit})
+    const result = await this.spotifyApi.searchTracks(query, { limit })
     const items = result.body.tracks?.items;
 
     return items?.map(it => ({
@@ -119,7 +119,7 @@ export default class SpotifyService {
     try {
       await this.checkTokenAndProceed();
 
-      const result = await this.spotifyApi.searchTracks(msg, {limit: 1})
+      const result = await this.spotifyApi.searchTracks(msg, { limit: 1 })
       const items = result.body.tracks?.items;
 
       if (items?.length) {
@@ -213,7 +213,7 @@ export default class SpotifyService {
   public async getVolume() {
     try {
       await this.checkTokenAndProceed();
-      const devices = (await this.spotifyApi.getMyDevices()).body.devices.filter(d => d.is_active);
+      const devices = (await this.spotifyApi.getMyDevices()).body?.devices?.filter(d => typeof d.volume_percent === 'number');
       return devices?.length ? devices[0].volume_percent : 0;
     } catch (err) {
       console.error(`Error getting volume: ${err}`);
